@@ -22,7 +22,7 @@ public class UnoDeck extends Deck {
 	public static final String[] SUITS = { "Red", "Yellow", "Green", "Blue" };
 	public static final String[] BACKS = { "2019", "2013", "2001", "1971" };
 	
-	public static final String CARD_IMAGE_FOLDER_PATH = "C:\\Users\\danie\\Pictures\\Cards\\Uno Deck\\";
+	public static final String CARD_IMAGE_FOLDER_PATH = "Uno Deck/";
 		
 	/**
 	 * Default constructor for Uno Deck with fun arrays and stuff
