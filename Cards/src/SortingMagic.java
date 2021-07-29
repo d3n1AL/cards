@@ -71,13 +71,18 @@ public class SortingMagic extends JFrame {
 	// JComboBoxes
 	private JComboBox<String> computerSortComboBox;
 	private JComboBox<String> cardFaceUpComboBox;
+	private JComboBox<String> deckTypeComboBox;
 	
 	// CardSorters
 	private CardSorter computerCardSorter = new CardSorter();
 	private CardSorter playerCardSorter = new CardSorter();
 	
 	// helps determine sizing of card images
-	private int cardLabelMaxDimension = 125;
+	private int cardLabelMaxDimension = 60;
+	
+	// helps determine sizing of frame and its various elements
+	private int frameWidth = 600;
+	private int frameHeight = 450;
 	
 	public SortingMagic() {
 		// Instantiate back-end elements
@@ -105,7 +110,7 @@ public class SortingMagic extends JFrame {
 	 */
 	public static void main(String[] args) {
 		// Create a Table object for this instance of Sorting Magic
-		Table table = new Table(new UnoDeck());
+		Table table = new Table();
 		
 		// Create two players to join the table
 		Player computerPlayer = new Player("Computer");
@@ -127,7 +132,7 @@ public class SortingMagic extends JFrame {
 		// Tell Java to exit the program when the window is closed
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		// Tell Java to title the window to Meme Magic
+		// Tell Java to title the window to Sorting Magic
 		this.setTitle("Sorting Magic");
 		
 		// We will use border layout on the main panel, since it is much easier for
@@ -141,11 +146,14 @@ public class SortingMagic extends JFrame {
 		// Create a panel to display and interact with cards
 		JPanel cardPanel = new JPanel(new BorderLayout());
 		
+		// Specify dimension of each card panel relative to the frameWidth and Height
+		Dimension cardPanelSize = new Dimension(5*this.frameWidth/6, 10*this.frameHeight/32);
+		
 		// ----------Computer Sub-Panel----------
 		
 		// Create a panel that displays the computer's cards
 		JPanel computerCardPanel = new JPanel(new BorderLayout());
-		computerCardPanel.setPreferredSize(new Dimension(1000, 300));
+		computerCardPanel.setPreferredSize(cardPanelSize);
 		// titles the panel with the computer player's name
 		computerCardPanel.setBorder(BorderFactory.createTitledBorder(this.computerPlayer.getPlayerName()));
 		
@@ -153,7 +161,7 @@ public class SortingMagic extends JFrame {
 		cardPanel.add(computerCardPanel, BorderLayout.PAGE_START);
 		
 		// Create a label that displays computer's sorting information
-		this.computerCardLabel = new JLabel("Compares: "+computerCardSorter.getCompareCounter()+"     Swaps: "+computerCardSorter.getSwapCounter()+"     Time Elapsed: "+computerCardSorter.getTimeElapsed()+" milliseconds");
+		this.computerCardLabel = new JLabel("Compares: "+computerCardSorter.getCompareCounter()+"     Swaps: "+computerCardSorter.getSwapCounter()+"     Time Elapsed: "+computerCardSorter.getTimeElapsed()+" seconds");
 		computerCardPanel.add(this.computerCardLabel, BorderLayout.PAGE_START);
 		
 		// Create a label that displays cards on a grid
@@ -164,7 +172,7 @@ public class SortingMagic extends JFrame {
 		
 		// Create a panel that displays the player's cards
 		JPanel playerCardPanel = new JPanel(new BorderLayout());
-		playerCardPanel.setPreferredSize(new Dimension(1000, 300));
+		playerCardPanel.setPreferredSize(cardPanelSize);
 		// Name panel using humanPlayer's inputted name
 		playerCardPanel.setBorder(BorderFactory.createTitledBorder(this.humanPlayer.getPlayerName()));
 		
@@ -184,54 +192,60 @@ public class SortingMagic extends JFrame {
 		// Create a panel to display controls for sorting/racing
 		JPanel controlPanel = new JPanel(new FlowLayout());
 		
-		// ----------Computer Options Sub-Panel----------
+		// Instantiate new dimensions for labels and textfields
+		Dimension labelDimension = new Dimension(80, 20);
+		Dimension textFieldDimension = new Dimension(20, 20);
+		Dimension comboBoxDimension = new Dimension(70, 20);
+		Dimension buttonDimension = new Dimension(70, 15);
+		
+		// ----------Computer Setting Sub-Panel----------
 		
 		// Create a panel that displays computer sorting options
-		JPanel computerOptionPanel = new JPanel(new BorderLayout());
+		JPanel computerSettingPanel = new JPanel(new BorderLayout());
 //		computerOptionsPanel.setPreferredSize(new Dimension(450, 150));
-		computerOptionPanel.setBorder(BorderFactory.createTitledBorder("Computer Options"));
+		computerSettingPanel.setBorder(BorderFactory.createTitledBorder("Computer Settings"));
 		
 		// Add computer options sub-panel to control panel
-		controlPanel.add(computerOptionPanel);
+		controlPanel.add(computerSettingPanel);
 		
 		// Create a panel that provides input for the compare delay in ms
 		JPanel compareDelayPanel = new JPanel();
 		
 		// Label for compare delay input
 		JLabel compareDelayLabel = new JLabel("Compare Delay (ms): ");
-		compareDelayLabel.setPreferredSize(new Dimension(120, 20));
+		compareDelayLabel.setPreferredSize(labelDimension);
 		compareDelayPanel.add(compareDelayLabel);
 		
 		// TextField for compare delay input
 		this.compareDelayField = new JTextField("0");
-		this.compareDelayField.setPreferredSize(new Dimension(50, 20));
+		this.compareDelayField.setPreferredSize(textFieldDimension);
 		compareDelayPanel.add(this.compareDelayField);
 		
 		// Add the panel about the compare delay info to the information panel
-		computerOptionPanel.add(compareDelayPanel, BorderLayout.PAGE_START);
+		computerSettingPanel.add(compareDelayPanel, BorderLayout.PAGE_START);
 		
 		// Create a panel that provides input for the compare delay in ms
 		JPanel computerSwapDelayPanel = new JPanel();
 		
 		// Label for compare delay input
 		JLabel computerSwapDelayLabel = new JLabel("Swap Delay (ms): ");
-		computerSwapDelayLabel.setPreferredSize(new Dimension(120, 20));
+		computerSwapDelayLabel.setPreferredSize(labelDimension);
 		computerSwapDelayPanel.add(computerSwapDelayLabel);
 		
 		// TextField for compare delay input
 		this.computerSwapDelayField = new JTextField("0");
-		this.computerSwapDelayField.setPreferredSize(new Dimension(50, 20));
+		this.computerSwapDelayField.setPreferredSize(textFieldDimension);
 		computerSwapDelayPanel.add(this.computerSwapDelayField);
 		
 		// Add the panel about the compare delay info to the information panel
-		computerOptionPanel.add(computerSwapDelayPanel, BorderLayout.CENTER);
+		computerSettingPanel.add(computerSwapDelayPanel, BorderLayout.CENTER);
 		
 		// Create a panel that provides input for the computer's sort algorithm
 		JPanel computerSortPanel = new JPanel();
 		
 		// Label for sort algorithm input
 		JLabel computerSortLabel = new JLabel("Sorting Algorithm: ");
-		computerSortLabel.setPreferredSize(new Dimension(120, 20));
+		computerSortLabel.setPreferredSize(labelDimension);
 		computerSortPanel.add(computerSortLabel);
 		
 		// ComboBox for sort algorithm input
@@ -239,58 +253,72 @@ public class SortingMagic extends JFrame {
 		this.computerSortComboBox = new JComboBox<>(sorts);
 		// default is "Bubble Sort"
 		this.computerSortComboBox.setSelectedIndex(0);
-		this.computerSortComboBox.setPreferredSize(new Dimension(100, 20));
+		this.computerSortComboBox.setPreferredSize(comboBoxDimension);
 		computerSortPanel.add(this.computerSortComboBox);
 		
 		// Add the computer sort panel to the computer options panel
-		computerOptionPanel.add(computerSortPanel, BorderLayout.PAGE_END);
+		computerSettingPanel.add(computerSortPanel, BorderLayout.PAGE_END);
 		
 		// ----------Deck Options Sub-Panel----------
 		
 		// Create a panel that displays deck sorting options
-		JPanel deckOptionPanel = new JPanel(new BorderLayout());
-		deckOptionPanel.setBorder(BorderFactory.createTitledBorder("Deck Options"));
+		JPanel deckSettingPanel = new JPanel(new BorderLayout());
+		deckSettingPanel.setBorder(BorderFactory.createTitledBorder("Deck Settings"));
 		
 		// Add computer options sub-panel to control panel
-		controlPanel.add(deckOptionPanel);
+		controlPanel.add(deckSettingPanel);
 		
 		// Create a panel that provides input for the number of cards to sort
 		JPanel cardNumberPanel = new JPanel();
 		
 		// Label for compare delay input
 		JLabel cardNumberLabel = new JLabel("# of cards to sort: ");
-		cardNumberLabel.setPreferredSize(new Dimension(120, 20));
+		cardNumberLabel.setPreferredSize(labelDimension);
 		cardNumberPanel.add(cardNumberLabel);
 		
 		// TextField for compare delay input
 		this.cardNumberField = new JTextField("13");
-		this.cardNumberField.setPreferredSize(new Dimension(50, 20));
+		this.cardNumberField.setPreferredSize(textFieldDimension);
 		cardNumberPanel.add(this.cardNumberField);
 		
 		// Add the panel about the compare delay info to the information panel
-		deckOptionPanel.add(cardNumberPanel, BorderLayout.PAGE_START);
+		deckSettingPanel.add(cardNumberPanel, BorderLayout.PAGE_START);
 		
 		// Create a panel that provides input for whether cards start faceUp
 		JPanel cardFaceUpPanel = new JPanel();
 		
 		// Label for compare delay input
 		JLabel cardFaceUpLabel = new JLabel("Cards start: ");
-		cardFaceUpLabel.setPreferredSize(new Dimension(80, 20));
+		cardFaceUpLabel.setPreferredSize(labelDimension);
 		cardFaceUpPanel.add(cardFaceUpLabel);
 		
 		// TextField for compare delay input
-		String[] upOrDown = { "Face Up", "Face Down" };
-		this.cardFaceUpComboBox = new JComboBox<>(upOrDown);
-		this.cardFaceUpComboBox.setPreferredSize(new Dimension(90, 20));
+		String[] cardFaceUpArray = { "Face Up", "Face Down" };
+		this.cardFaceUpComboBox = new JComboBox<>(cardFaceUpArray);
+		this.cardFaceUpComboBox.setPreferredSize(comboBoxDimension);
 		this.cardFaceUpComboBox.setSelectedIndex(0); // default is face up
 		cardFaceUpPanel.add(this.cardFaceUpComboBox);
 		
 		// Add the panel about the compare delay info to the information panel
-		deckOptionPanel.add(cardFaceUpPanel, BorderLayout.CENTER);
+		deckSettingPanel.add(cardFaceUpPanel, BorderLayout.CENTER);
 		
-		// Create a button that opens a menu containing more deck options and add it to the panel too
-		JButton deckOptionsButton = new JButton("Deck Options");
-		deckOptionPanel.add(deckOptionsButton, BorderLayout.PAGE_END);
+		// Create a panel that provides input for which card to use
+		JPanel deckTypePanel = new JPanel();
+		
+		// Label for deck type input
+		JLabel deckTypeLabel = new JLabel("Deck type: ");
+		deckTypeLabel.setPreferredSize(labelDimension);
+		deckTypePanel.add(deckTypeLabel);
+		
+		// TextField for compare delay input
+		String[] deckTypeArray = { "Uno", "Poker" };
+		this.deckTypeComboBox = new JComboBox<>(deckTypeArray);
+		this.deckTypeComboBox.setPreferredSize(comboBoxDimension);
+		this.deckTypeComboBox.setSelectedIndex(0); // default is Uno
+		deckTypePanel.add(this.deckTypeComboBox);
+		
+		// Add the panel about the compare delay info to the information panel
+		deckSettingPanel.add(deckTypePanel, BorderLayout.PAGE_END);
 
 		// ----------Player Options Sub-Panel----------
 		
@@ -306,12 +334,12 @@ public class SortingMagic extends JFrame {
 		
 		// Label for compare delay input
 		JLabel maxFaceUpLabel = new JLabel("Max # of cards face-up: ");
-		maxFaceUpLabel.setPreferredSize(new Dimension(140, 20));
+		maxFaceUpLabel.setPreferredSize(labelDimension);
 		maxFaceUpPanel.add(maxFaceUpLabel);
 		
 		// TextField for compare delay input
 		this.maxFaceUpField = new JTextField("2");
-		this.maxFaceUpField.setPreferredSize(new Dimension(70, 20));
+		this.maxFaceUpField.setPreferredSize(textFieldDimension);
 		maxFaceUpPanel.add(this.maxFaceUpField);
 		
 		// Add the panel about the compare delay info to the information panel
@@ -322,12 +350,12 @@ public class SortingMagic extends JFrame {
 		
 		// Label for compare delay input
 		JLabel playerSwapDelayLabel = new JLabel("Swap Delay (ms): ");
-		playerSwapDelayLabel.setPreferredSize(new Dimension(120, 20));
+		playerSwapDelayLabel.setPreferredSize(labelDimension);
 		playerSwapDelayPanel.add(playerSwapDelayLabel);
 		
 		// TextField for compare delay input
 		this.playerSwapDelayField = new JTextField("0");
-		this.playerSwapDelayField.setPreferredSize(new Dimension(50, 20));
+		this.playerSwapDelayField.setPreferredSize(textFieldDimension);
 		playerSwapDelayPanel.add(this.playerSwapDelayField);
 		
 		// Add the panel about the compare delay info to the information panel
@@ -344,28 +372,28 @@ public class SortingMagic extends JFrame {
 		
 		// Create tutorial button and add it to the action panel
 		JButton dealButton = new JButton("Deal");
-		dealButton.setPreferredSize(new Dimension(150, 20));
+		dealButton.setPreferredSize(buttonDimension);
 		actionPanel.add(dealButton);
 		// Add Deal Button Listener to demonstrate the computer's sorting method
 		dealButton.addActionListener(new DealButtonListener());
 		
 		// Create demo button and add it to the action panel
 		JButton demoButton = new JButton("Demo");
-		demoButton.setPreferredSize(new Dimension(150, 20));
+		demoButton.setPreferredSize(buttonDimension);
 		actionPanel.add(demoButton);
 		// Add Demo Button Listener to demonstrate the computer's sorting method
 		demoButton.addActionListener(new DemoButtonListener());
 		
 		// Create practice button and add it to the action panel
 		JButton practiceButton = new JButton("Practice");
-		practiceButton.setPreferredSize(new Dimension(150, 20));
+		practiceButton.setPreferredSize(buttonDimension);
 		actionPanel.add(practiceButton);
 		// Add Practice Button Listener to demonstrate player sorting!
 		practiceButton.addActionListener(new PracticeButtonListener());
 		
 		// Create race button and add it to the action panel
 		JButton raceButton = new JButton("Race!");
-		practiceButton.setPreferredSize(new Dimension(150, 20));
+		practiceButton.setPreferredSize(buttonDimension);
 		actionPanel.add(raceButton);
 		// Add Race Button Listener for, well, racing
 		raceButton.addActionListener(new RaceButtonListener());
@@ -383,7 +411,7 @@ public class SortingMagic extends JFrame {
 		this.getContentPane().add(panelPane);
 
 		// Set the preferred size and show the main application window
-		this.setPreferredSize(new Dimension(1200, 800));
+		this.setPreferredSize(new Dimension(this.frameWidth, this.frameHeight));
 		this.pack();
 		this.setVisible(true);
 	}
@@ -401,15 +429,21 @@ public class SortingMagic extends JFrame {
 		public void actionPerformed(ActionEvent evt) {
 			// TODO should I reset the values in the card sorters for each new sort or should I just leave it as is with these?
 			// reset the card labels too
-			computerCardLabel.setText("Compares: 0     Swaps: 0     Time Elapsed: 0 milliseconds");
+			computerCardLabel.setText("Compares: 0     Swaps: 0     Time Elapsed: 0.0 seconds");
 			playerCardLabel.setText("Flips: 0     Swaps: 0     Time Elapsed: 0.0 seconds");
 			// clear the borders around both the card view panels
 			computerCardViewPanel.setBorder(BorderFactory.createEmptyBorder());
 			playerCardViewPanel.setBorder(BorderFactory.createEmptyBorder());
 			
-			// return all cards from players
-			for (Player player : table.getPlayers()) {
-				player.returnAllCards();
+			// set the right deck type depending on what's selected
+			// note: you can't use deckTypeComboBox.getSelectedItem() because it only returns an object
+			switch(deckTypeComboBox.getItemAt(deckTypeComboBox.getSelectedIndex())) {
+			case "Poker":
+				// note that setDeck automatically returns all table and player cards to deck before switch decks
+				table.setDeck(new PokerDeck());
+				break;
+			default:
+				table.setDeck(new UnoDeck());
 			}
 			
 			// refill and reshuffle the deck
@@ -548,11 +582,7 @@ public class SortingMagic extends JFrame {
 		}
 	}
 	
-	// TODO Figure out if I should keep this?
-	// temporary field arrayList to store player selected cards for swapping, debating if I should keep this
-	private ArrayList<Deck.Card> computerSelectedCards = new ArrayList<>(); 
-	private ArrayList<Deck.Card> playerSelectedCards = new ArrayList<>(); 
-	
+	// ArrayList to store what cards are selected
 	private ArrayList<Integer> computerSelectedIndices = new ArrayList<>();
 	private ArrayList<Integer> playerSelectedIndices = new ArrayList<>();
 	
@@ -617,8 +647,9 @@ public class SortingMagic extends JFrame {
 					// remove from selected cards
 					selectedIndices.clear();
 					
-					System.out.println(currentFaceUp);
-					System.out.println(Integer.parseInt(maxFaceUpField.getText()));
+					// added to debug the max cards-up feature
+//					System.out.println(currentFaceUp);
+//					System.out.println(Integer.parseInt(maxFaceUpField.getText()));
 					
 					// check that cards are dealt face down
 					if (this.cards.get(cardIndex).isFaceUp() || cardFaceUpComboBox.getSelectedItem().equals("Face Up") || currentFaceUp < Integer.parseInt(maxFaceUpField.getText())) {
@@ -680,7 +711,7 @@ public class SortingMagic extends JFrame {
 						selectedIndices.clear();
 						
 						// note: I would try to find some way to access each label's CardListener but I don't know how to
-						// because I don't know how Class<T> works and it's not worth the effor to learn at the moment so
+						// because I don't know how Class<T> works and it's not worth the effort to learn at the moment so
 						// we're just going try to avoid it for now
 						
 					} else {
@@ -689,8 +720,8 @@ public class SortingMagic extends JFrame {
 						selectedIndices.add(this.cardIndex);
 					}
 					
-					// print selectedIndices for good luck
-					System.out.println(selectedIndices);
+//					// print selectedIndices for good luck
+//					System.out.println(selectedIndices);
 				}
 				
 				// repaints the panel so the changes to the card properly display
@@ -801,7 +832,7 @@ public class SortingMagic extends JFrame {
 		public void actionPerformed(ActionEvent evt) {
 			// deal button code
 			// reset the card labels too
-			computerCardLabel.setText("Compares: 0     Swaps: 0     Time Elapsed: 0 milliseconds");
+			computerCardLabel.setText("Compares: 0     Swaps: 0     Time Elapsed: 0.0 seconds");
 			playerCardLabel.setText("Flips: 0     Swaps: 0     Time Elapsed: 0.0 seconds");
 			// clear the borders around both the card view panels
 			computerCardViewPanel.setBorder(BorderFactory.createEmptyBorder());
@@ -845,8 +876,10 @@ public class SortingMagic extends JFrame {
 			
 			// begin computer sorting
 			beginComputerSorting();			
+			// Get timeElapsed in seconds
+			double timeElapsedInSeconds = (double) computerCardSorter.getTimeElapsed() / 1000.0;
 			// re-displays the label with the new compares and swaps
-			computerCardLabel.setText("Compares: "+computerCardSorter.getCompareCounter()+"     Swaps: "+computerCardSorter.getSwapCounter()+"     Time Elapsed: "+computerCardSorter.getTimeElapsed()+" milliseconds");
+			computerCardLabel.setText("Compares: "+computerCardSorter.getCompareCounter()+"     Swaps: "+computerCardSorter.getSwapCounter()+"     Time Elapsed: "+timeElapsedInSeconds+" seconds");
 			// let's add a green border to signify this
 			computerCardViewPanel.setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
 			// repaint to show the new elements
