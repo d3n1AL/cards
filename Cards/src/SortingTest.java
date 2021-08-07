@@ -658,6 +658,67 @@ public class SortingTest extends JFrame {
 		}
 	}
 	
+	// helper methods to clean up sortTimer methods
+	
+	private void resetComputerCardLabel() {
+		// Get timeElapsed in seconds
+		double timeElapsedInSeconds = (double) computerCardSorter.getTimeElapsed() / 1000.0;
+		// re-displays the label with the new compares and swaps
+		computerCardLabel.setText("Compares: "+computerCardSorter.getCompareCounter()+"     Swaps: "+computerCardSorter.getSwapCounter()+"     Time Elapsed: "+timeElapsedInSeconds+" seconds");
+		// repaint the cardLabel
+		computerCardLabel.repaint();
+	}
+	
+	private int compareComputerCards(int a, int b) {
+		// wait compare delay
+		try {
+		    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
+		} catch (InterruptedException ie) {
+		    Thread.currentThread().interrupt();
+		}
+		// increment compareCounter
+		computerCardSorter.setCompareCounter(computerCardSorter.getCompareCounter()+1);
+		// reset ComputerCardLabel
+		resetComputerCardLabel();
+		// return the results of the comparison
+		return computerPlayer.getCards().get(a).compareTo(computerPlayer.getCards().get(b));
+	}
+	
+	private void swapComputerCards(int a, int b) {
+		// wait computer swap delay
+		try {
+		    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
+		} catch (InterruptedException ie) {
+		    Thread.currentThread().interrupt();
+		}
+		// increment swapCounter
+		computerCardSorter.setSwapCounter(computerCardSorter.getSwapCounter()+1);
+		// reset ComputerCardLabel
+		resetComputerCardLabel();
+		// swap the cards
+		Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
+		computerCardSorter.swap(computerCardArray, computerCardLabelArray, a, b, cardLabelMaxDimension);
+		CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
+		// print for good luck
+		System.out.println(computerPlayer.getCards());
+	}
+	
+	private void markComputerCardLabel(int index, String color) {
+		switch(color) {
+		case "Yellow":
+			computerCardLabelArray[index].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+			break;
+		case "Green":
+			computerCardLabelArray[index].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+			break;
+		case "Blue":
+			computerCardLabelArray[index].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 255), 5));
+			break;
+		default:
+			computerCardLabelArray[index].setBorder(BorderFactory.createEmptyBorder());
+		}
+	}
+	
 	private class BubbleSortListener implements ActionListener {
 		
 		private boolean comparing = false;
@@ -675,55 +736,37 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				// mark cards with green border
-				computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[j+1].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(j, "Green");
+				markComputerCardLabel(j+1, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
 				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(j).compareTo(computerPlayer.getCards().get(j+1)) > 0) {
+					if (compareComputerCards(j, j+1) > 0) {
 						// if not mark cards with yellow border
-						computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[j+1].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(j, "Yellow");
+						markComputerCardLabel(j+1, "Yellow");
 						// and set swapping to true
 						swapping = true;
 						// set isSorted to false
 						isSorted = false;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[j+1].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(j, "Empty");
+						markComputerCardLabel(j+1, "Empty");
 						comparing = false;		
 						incrementPointers();
 					}
 				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, j, j+1, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+					swapComputerCards(j, j+1);
 					// clear border
-					computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[j+1].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(j, "Empty");
+					markComputerCardLabel(j+1, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
-					
 					incrementPointers();
 				}	
 			}
@@ -737,6 +780,9 @@ public class SortingTest extends JFrame {
 				i--;
 				// and check if x is at 0 or the rest of the array is sorted, if so, stop the timer
 				if (i <= 0 || isSorted) {
+					// record end time
+					computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+					resetComputerCardLabel();
 					sortTimer.stop();
 				}
 				// and set isSorted to true
@@ -762,29 +808,23 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				// mark cards with green border
-				computerCardLabelArray[smallestCardIndex].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-				computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(smallestCardIndex, "Yellow");
+				markComputerCardLabel(j, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
 				if (!swapping) {
-					// if comparing, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}	
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(smallestCardIndex).compareTo(computerPlayer.getCards().get(j)) > 0) {
+					if (compareComputerCards(smallestCardIndex, j) > 0) {
 						// clear border on smallestCardIndex, leave mark j with yellow border
-						computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[smallestCardIndex].setBorder(BorderFactory.createEmptyBorder());
+						markComputerCardLabel(j, "Yellow");
+						markComputerCardLabel(smallestCardIndex, "Empty");
 						// set smallestCardIndex to j
 						smallestCardIndex = j;
 					} else {
 						// otherwise clear border on j
-						computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(j, "Empty");
 					}					
 					// if j is at the end, set swapping to true, otherwise set comparing to false
 					if (j >= computerPlayer.getCards().size() - 1) {
@@ -796,20 +836,9 @@ public class SortingTest extends JFrame {
 					}
 				// if swapping wait swap delay and then swap
 				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}				
-					// swap card at i with card at smallestCardIndex
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, i, smallestCardIndex, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+					swapComputerCards(i, smallestCardIndex);
 					// clear the border on smallestCardIndex
-					computerCardLabelArray[smallestCardIndex].setBorder(BorderFactory.createEmptyBorder());
+					markComputerCardLabel(smallestCardIndex, "Empty");
 					// set both comparing and swapping to false
 					comparing = false;
 					swapping = false;
@@ -828,6 +857,9 @@ public class SortingTest extends JFrame {
 				i = 0;
 				j = i+1;
 				smallestCardIndex = i;
+				// record end time
+				computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+				resetComputerCardLabel();
 				// stop the timer
 				sortTimer.stop();
 			} else {
@@ -851,49 +883,32 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				// mark cards with green border
-				computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[j-1].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(j, "Green");
+				markComputerCardLabel(j-1, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
 				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(j-1).compareTo(computerPlayer.getCards().get(j)) > 0) {
+					if (compareComputerCards(j-1, j) > 0) {						
 						// if not mark cards with yellow border
-						computerCardLabelArray[j-1].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(j-1, "Yellow");
+						markComputerCardLabel(j, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[j-1].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(j-1, "Empty");
+						markComputerCardLabel(j, "Empty");
 						comparing = false;		
 						incrementPointers();
 					}
 				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, j-1, j, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+					swapComputerCards(j-1, j);
 					// clear border
-					computerCardLabelArray[j-1].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(j-1, "Empty");
+					markComputerCardLabel(j, "Empty"); 
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
@@ -914,7 +929,13 @@ public class SortingTest extends JFrame {
 			i++;
 			j = i;
 			// and check if i is past the end of the array, if so, stop the timer
-			if (i >= computerPlayer.getCards().size()) sortTimer.stop();
+			if (i >= computerPlayer.getCards().size()) {
+				// record end time
+				computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+				resetComputerCardLabel();
+				// stop the timer
+				sortTimer.stop();
+			}
 		}
 	}
 	
@@ -941,49 +962,32 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				// mark cards with green border
-				computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[j-gap].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(j, "Green");
+				markComputerCardLabel(j-gap, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
 				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(j-gap).compareTo(computerPlayer.getCards().get(j)) > 0) {
+					if (compareComputerCards(j-gap, j) > 0) {
 						// if not mark cards with yellow border
-						computerCardLabelArray[j-gap].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[j].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(j, "Yellow");
+						markComputerCardLabel(j-gap, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[j-gap].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(j, "Empty");
+						markComputerCardLabel(j-gap, "Empty");
 						comparing = false;		
 						incrementPointers();
 					}
-				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, j-gap, j, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+				} else {					
+					swapComputerCards(j-gap, j);
 					// clear border
-					computerCardLabelArray[j-gap].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[j].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(j, "Empty");
+					markComputerCardLabel(j-gap, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
@@ -1007,6 +1011,9 @@ public class SortingTest extends JFrame {
 			if (i >= computerPlayer.getCards().size()) {
 				// if so, check if gap size is one or less
 				if (gap <= 1) {
+					// record end time
+					computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+					resetComputerCardLabel();
 					// if gap is one or less, stop the timer
 					sortTimer.stop();
 				// otherwise, half the gap and repeat
@@ -1062,17 +1069,22 @@ public class SortingTest extends JFrame {
 						// set hasHigh to false
 						hasHigh = false;
 						// and clear border at pivot
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createEmptyBorder());
+						markComputerCardLabel(pivot, "Empty");
 						// check if queues are empty so we know when to stop
 						if (lowQueue.isEmpty() && highQueue.isEmpty()) {
 							
-							boolean isSorted = true;
-							for (int i = 0; i < computerPlayer.getCards().size()-1; i++) {
-								if (computerPlayer.getCards().get(i).compareTo(computerPlayer.getCards().get(i+1)) > 0) {
-									isSorted = false;
-								}
-							}
-							if (isSorted) System.out.println("cards is sorted!!!!");
+//							boolean isSorted = true;
+//							for (int i = 0; i < computerPlayer.getCards().size()-1; i++) {
+//								if (computerPlayer.getCards().get(i).compareTo(computerPlayer.getCards().get(i+1)) > 0) {
+//									isSorted = false;
+//								}
+//							}
+//							if (isSorted) System.out.println("cards is sorted!!!!");
+//							else System.out.println("cards is NOT sorted!!!!");
+							
+							// record end time
+							computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+							resetComputerCardLabel();
 							
 							sortTimer.stop();	
 						}
@@ -1086,13 +1098,13 @@ public class SortingTest extends JFrame {
 						// set j as pivot+1
 						j = pivot + 1;
 						// and mark pivot with yellow border
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(pivot, "Yellow");
 						
-						System.out.println("current pivot: " + pivot);
-						System.out.println("current high: " + high);
-						System.out.println("current low: " + low);
-						System.out.println("current i: " + i);
-						System.out.println("current j: " + j);
+//						System.out.println("current pivot: " + pivot);
+//						System.out.println("current high: " + high);
+//						System.out.println("current low: " + low);
+//						System.out.println("current i: " + i);
+//						System.out.println("current j: " + j);
 						
 						// finally, set hasPivot to true
 						hasPivot = true;
@@ -1126,11 +1138,11 @@ public class SortingTest extends JFrame {
 								firstCardComparison = 0;
 								secondCardComparison = 0;
 								// mark pivot with yellow border
-								computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+								markComputerCardLabel(pivot, "Yellow");
 								
-								System.out.println("pivot: " + pivot);
-								System.out.println("i: " + i);
-								System.out.println("j: " + j);
+//								System.out.println("pivot: " + pivot);
+//								System.out.println("i: " + i);
+//								System.out.println("j: " + j);
 							}
 						} else {
 							// then increment pivot and j up
@@ -1139,11 +1151,11 @@ public class SortingTest extends JFrame {
 							// and set card comparisons to 0
 							firstCardComparison = 0;
 							// mark pivot with yellow border
-							computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						
-							System.out.println("pivot: " + pivot);
-							System.out.println("i: " + i);
-							System.out.println("j: " + j);
+							markComputerCardLabel(pivot, "Yellow");
+							
+//							System.out.println("pivot: " + pivot);
+//							System.out.println("i: " + i);
+//							System.out.println("j: " + j);
 						}
 					} else if (firstCardComparison < 0) {
 						// then increment j up
@@ -1151,11 +1163,11 @@ public class SortingTest extends JFrame {
 						// and set card comparisons to 0
 						firstCardComparison = 0;
 						// mark pivot with yellow border
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-					
-						System.out.println("pivot: " + pivot);
-						System.out.println("i: " + i);
-						System.out.println("j: " + j);
+						markComputerCardLabel(pivot, "Yellow");
+						
+//						System.out.println("pivot: " + pivot);
+//						System.out.println("i: " + i);
+//						System.out.println("j: " + j);
 					}
 				// check if j is at or past the end of the array
 				} else if (j >= high) {
@@ -1176,11 +1188,11 @@ public class SortingTest extends JFrame {
 								firstCardComparison = 0;
 								secondCardComparison = 0;
 								// mark pivot with yellow border
-								computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-							
-								System.out.println("pivot: " + pivot);
-								System.out.println("i: " + i);
-								System.out.println("j: " + j);
+								markComputerCardLabel(pivot, "Yellow");
+								
+//								System.out.println("pivot: " + pivot);
+//								System.out.println("i: " + i);
+//								System.out.println("j: " + j);
 							}
 						} else {
 							// then decrement pivot and increment i
@@ -1189,11 +1201,11 @@ public class SortingTest extends JFrame {
 							// and set card comparisons to 0
 							firstCardComparison = 0;
 							// mark pivot with yellow border
-							computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						
-							System.out.println("pivot: " + pivot);
-							System.out.println("i: " + i);
-							System.out.println("j: " + j);
+							markComputerCardLabel(pivot, "Yellow");
+							
+//							System.out.println("pivot: " + pivot);
+//							System.out.println("i: " + i);
+//							System.out.println("j: " + j);
 						}
 					} else if (firstCardComparison < 0) {
 						// then increment i
@@ -1201,11 +1213,11 @@ public class SortingTest extends JFrame {
 						// and set card comparisons to 0
 						firstCardComparison = 0;
 						// mark pivot with yellow border
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-					
-						System.out.println("pivot: " + pivot);
-						System.out.println("i: " + i);
-						System.out.println("j: " + j);
+						markComputerCardLabel(pivot, "Yellow");
+						
+//						System.out.println("pivot: " + pivot);
+//						System.out.println("i: " + i);
+//						System.out.println("j: " + j);
 					}
 				// if i is not past the pivot and j is not past the end
 				} else {
@@ -1228,15 +1240,15 @@ public class SortingTest extends JFrame {
 									i++;
 									j++;
 								}
-								System.out.println("pivot: " + pivot);
-								System.out.println("i: " + i);
-								System.out.println("j: " + j);
+//								System.out.println("pivot: " + pivot);
+//								System.out.println("i: " + i);
+//								System.out.println("j: " + j);
 								// reset cardComparisons
 								firstCardComparison = 0;
 								secondCardComparison = 0;
 								thirdCardComparison = 0;
 								// mark pivot with yellow border
-								computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+								markComputerCardLabel(pivot, "Yellow");
 							}
 						}
 					}
@@ -1258,10 +1270,10 @@ public class SortingTest extends JFrame {
 				hasHigh = false;
 				hasPivot = false;
 				// and clear pivot border
-				computerCardLabelArray[pivot].setBorder(BorderFactory.createEmptyBorder());
+				markComputerCardLabel(pivot, "Empty");
 				
-				System.out.println(lowQueue);
-				System.out.println(highQueue);
+//				System.out.println(lowQueue);
+//				System.out.println(highQueue);
 			}
 		}
 		
@@ -1269,58 +1281,40 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				
-				System.out.println("Comparing and swapping " + a + " and " + b + "...");
+//				System.out.println("Comparing and swapping " + a + " and " + b + "...");
 				
 				// mark cards with green border
-				computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(a, "Green");
+				markComputerCardLabel(b, "Green");
+				
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
-				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
+				if (!swapping) {					
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(a).compareTo(computerPlayer.getCards().get(b)) > 0) {
+					if (compareComputerCards(a, b) > 0) {
 						// if not mark cards with yellow border
-						computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(a, "Yellow");
+						markComputerCardLabel(b, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						comparing = false;		
-						
 						// return -1 to indicate a comes before b
 						return -1;
 					}
 				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, a, b, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+					swapComputerCards(a, b);
 					// clear border
-					computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(a, "Empty");
+					markComputerCardLabel(b, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
-					
 					// return 1 to indicate a comes after b
 					return 1;
 				}	
@@ -1333,57 +1327,39 @@ public class SortingTest extends JFrame {
 			// check if not comparing
 			if (!comparing) {
 				
-				System.out.println("Comparing and swapping " + a + " and " + b + "...");
+//				System.out.println("Comparing and swapping " + a + " and " + b + "...");
 				
-				// mark cards with green border
-				computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				// mark cards with green border				
+				markComputerCardLabel(a, "Green");
+				markComputerCardLabel(b, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
-				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
+				if (!swapping) {		
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(a).compareTo(computerPlayer.getCards().get(b)) > 0) {
+					if (compareComputerCards(a, b) > 0) {
 						// clear compared cards' border
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder());
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						// if not mark cards with yellow border
-						computerCardLabelArray[c].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[d].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(c, "Yellow");
+						markComputerCardLabel(d, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						comparing = false;		
-						
 						// return -1 to indicate a comes before b
 						return -1;
 					}
-				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, c, d, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+				} else {					
+					swapComputerCards(c, d);
 					// clear border
-					computerCardLabelArray[c].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[d].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(c, "Empty");
+					markComputerCardLabel(d, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
@@ -1436,18 +1412,22 @@ public class SortingTest extends JFrame {
 						// set hasHigh to false
 						hasHigh = false;
 						// and clear border at pivot
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createEmptyBorder());
+						markComputerCardLabel(pivot, "Empty");
 						// check if queues are empty so we know when to stop
 						if (lowQueue.isEmpty() && highQueue.isEmpty()) {
 							
-							boolean isSorted = true;
-							for (int i = 0; i < computerPlayer.getCards().size()-1; i++) {
-								if (computerPlayer.getCards().get(i).compareTo(computerPlayer.getCards().get(i+1)) > 0) {
-									isSorted = false;
-								}
-							}
-							if (isSorted) System.out.println("cards is sorted!!!!");
-							else System.out.println("cards is NOT sorted!!!");
+//							boolean isSorted = true;
+//							for (int i = 0; i < computerPlayer.getCards().size()-1; i++) {
+//								if (computerPlayer.getCards().get(i).compareTo(computerPlayer.getCards().get(i+1)) > 0) {
+//									isSorted = false;
+//								}
+//							}
+//							if (isSorted) System.out.println("cards is sorted!!!!");
+//							else System.out.println("cards is NOT sorted!!!");
+							
+							// record end time
+							computerCardSorter.setTimeElapsed(System.currentTimeMillis() - computerCardSorter.getTimeElapsed());
+							resetComputerCardLabel();
 							
 							sortTimer.stop();	
 						}
@@ -1459,7 +1439,7 @@ public class SortingTest extends JFrame {
 						// set i as low
 						i = low;
 						// and mark pivot with yellow border
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(pivot, "Yellow");
 						
 //						System.out.println("current pivot: " + pivot);
 //						System.out.println("current high: " + high);
@@ -1496,7 +1476,7 @@ public class SortingTest extends JFrame {
 							firstCardComparison = 0;
 							secondCardComparison = 0;
 							// mark pivot with yellow border
-							computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+							markComputerCardLabel(pivot, "Yellow");
 						
 //							System.out.println("pivot: " + pivot);
 //							System.out.println("i: " + i);
@@ -1508,7 +1488,7 @@ public class SortingTest extends JFrame {
 						// and set card comparisons to 0
 						firstCardComparison = 0;
 						// mark pivot with yellow border
-						computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(pivot, "Yellow");
 					
 //						System.out.println("pivot: " + pivot);
 //						System.out.println("i: " + i);
@@ -1519,7 +1499,7 @@ public class SortingTest extends JFrame {
 					// and set card comparisons to 0
 					firstCardComparison = 0;
 					// mark pivot with yellow border
-					computerCardLabelArray[pivot].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+					markComputerCardLabel(pivot, "Yellow");
 				
 //					System.out.println("pivot: " + pivot);
 //					System.out.println("i: " + i);
@@ -1541,7 +1521,7 @@ public class SortingTest extends JFrame {
 				hasHigh = false;
 				hasPivot = false;
 				// and clear pivot border
-				computerCardLabelArray[pivot].setBorder(BorderFactory.createEmptyBorder());
+				markComputerCardLabel(pivot, "Empty");
 				
 //				System.out.println(lowQueue);
 //				System.out.println(highQueue);
@@ -1555,55 +1535,37 @@ public class SortingTest extends JFrame {
 //				System.out.println("Comparing and swapping " + a + " and " + b + "...");
 				
 				// mark cards with green border
-				computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				markComputerCardLabel(a, "Green");
+				markComputerCardLabel(b, "Green");
+				
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
-				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
+				if (!swapping) {					
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(a).compareTo(computerPlayer.getCards().get(b)) > 0) {
+					if (compareComputerCards(a, b) > 0) {
 						// if not mark cards with yellow border
-						computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(a, "Yellow");
+						markComputerCardLabel(b, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						comparing = false;		
-						
 						// return -1 to indicate a comes before b
 						return -1;
 					}
 				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, a, b, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+					swapComputerCards(a, b);
 					// clear border
-					computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(a, "Empty");
+					markComputerCardLabel(b, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
-					
 					// return 1 to indicate a comes after b
 					return 1;
 				}	
@@ -1618,55 +1580,37 @@ public class SortingTest extends JFrame {
 				
 //				System.out.println("Comparing and swapping " + a + " and " + b + "...");
 				
-				// mark cards with green border
-				computerCardLabelArray[a].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
-				computerCardLabelArray[b].setBorder(BorderFactory.createLineBorder(new Color(0, 255, 0), 5));
+				// mark cards with green border				
+				markComputerCardLabel(a, "Green");
+				markComputerCardLabel(b, "Green");
 				// set comparing to true
 				comparing = true;
 			} else {
 				// check if swapping
-				if (!swapping) {
-					// if comparing and not swapping, wait the compare delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(compareDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
+				if (!swapping) {		
 					// check if passed cards are in order
-					if (computerPlayer.getCards().get(a).compareTo(computerPlayer.getCards().get(b)) > 0) {
+					if (compareComputerCards(a, b) > 0) {
 						// clear compared cards' border
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder());
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						// if not mark cards with yellow border
-						computerCardLabelArray[c].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
-						computerCardLabelArray[d].setBorder(BorderFactory.createLineBorder(new Color(255, 255, 0), 5));
+						markComputerCardLabel(c, "Yellow");
+						markComputerCardLabel(d, "Yellow");
 						// and set swapping to true
 						swapping = true;
 					} else {
 						// otherwise clear border, set comparing to false, and stop
-						computerCardLabelArray[a].setBorder(BorderFactory.createEmptyBorder());
-						computerCardLabelArray[b].setBorder(BorderFactory.createEmptyBorder()); 
+						markComputerCardLabel(a, "Empty");
+						markComputerCardLabel(b, "Empty");
 						comparing = false;		
-						
 						// return -1 to indicate a comes before b
 						return -1;
 					}
-				} else {
-					// if swapping, wait swap delay
-					try {
-					    TimeUnit.MILLISECONDS.sleep(Integer.parseInt(computerSwapDelayField.getText()));
-					} catch (InterruptedException ie) {
-					    Thread.currentThread().interrupt();
-					}
-					// swap the cards
-					Deck.Card[] computerCardArray = computerPlayer.getCards().toArray(new Deck.Card[computerPlayer.getCards().size()]);
-					computerCardSorter.swap(computerCardArray, computerCardLabelArray, c, d, cardLabelMaxDimension);
-					CardSorter.toCardArrayListFromArray(computerPlayer.getCards(), computerCardArray);
-					// print for good luck
-					System.out.println(computerPlayer.getCards());
+				} else {					
+					swapComputerCards(c, d);
 					// clear border
-					computerCardLabelArray[c].setBorder(BorderFactory.createEmptyBorder());
-					computerCardLabelArray[d].setBorder(BorderFactory.createEmptyBorder()); 
+					markComputerCardLabel(c, "Empty");
+					markComputerCardLabel(d, "Empty");
 					// set comparing and swapping to false
 					comparing = false;
 					swapping = false;
@@ -1704,7 +1648,9 @@ public class SortingTest extends JFrame {
 				sortTimer = new Timer(0, new QuickSortListener());
 				break;
 			}	
-			
+			// record start time
+			computerCardSorter.resetCounters();
+			// start sort if there is at least one card in the computer
 			if (computerPlayer.getCards().size() >= 1 && computerCardLabelArray.length >= 1) sortTimer.start();
 		}
 	}
