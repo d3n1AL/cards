@@ -2,7 +2,7 @@
 
 Card Sorting Simulator created for my Science Education Internship at the Science Museum of Virginia for the Summer of 2021
 
-Original intent was to create an environment that I could use to animate and explain sorting algorithms, with users having the ability to "race" computers by toggling the algorithm used and various delays
+The original intent was to create an environment that I could use to animate and explain sorting algorithms, with users having the ability to "race" computers by toggling the algorithm used and various delays
 
 While I was relatively successful in implementing the user side, I was unable to figure out how to safely animate the computer side of the animations, likely due to issues with threading in Swing (again, I am only a first-year CS student with little to no coding experience)
 
